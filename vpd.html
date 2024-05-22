@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPD Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="calculator-container">
+        <div class="units-and-growth-stage">
+            <div class="temperature-units">
+                <label><input type="radio" name="units" value="C"> °C</label>
+                <label><input type="radio" name="units" value="F" checked> °F</label>
+            </div>
+            <select id="growth-stage">
+                <option value="seedling">Seedling</option>
+                <option value="veg">Veg</option>
+                <option value="flower">Flower</option>
+                <option value="late-flower">Late Flower</option>
+            </select>
+        </div>
+        <div class="input-fields">
+            <div class="input-group">
+                <label for="temperature">Room Temperature:</label>
+                <div class="input-row">
+                    <span class="lock-icon" id="lock-temperature">🔓</span>
+                    <input type="number" id="temperature" min="0" max="99">
+                    <span class="unit-symbol">°F</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="humidity">Relative Humidity:</label>
+                <div class="input-row">
+                    <span class="lock-icon" id="lock-humidity">🔓</span>
+                    <input type="number" id="humidity" min="0" max="99">
+                    <span class="rh-symbol">%</span>
+                </div>
+            </div>
+        </div>
+        <div class="vpd-slider">
+            <div class="slider-labels">
+                <span>Danger</span>
+                <span>Optimal</span>
+                <span>Danger</span>
+            </div>
+            <input type="range" id="vpd-range" min="0" max="6.28" step="0.01">
+            <div id="vpd-value">VPD: 0.00</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

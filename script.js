@@ -1,32 +1,91 @@
+
 document.addEventListener("DOMContentLoaded", function() {
-    // Get references to input fields and output element
     const temperatureInput = document.getElementById("temperature");
     const humidityInput = document.getElementById("humidity");
     const vpdValueDiv = document.getElementById("vpd-value");
     const vpdRange = document.getElementById("vpd-range");
     const unitRadios = document.querySelectorAll('input[name="units"]');
     const unitSymbol = document.querySelector('.unit-symbol');
+    const lockIcons = document.querySelectorAll('.custom-lock-icon')
+    const lockTemperatureIcon = document.getElementById('lock-temperature');
+    const lockHumidityIcon = document.getElementById('lock-humidity');
     let currentUnit = "F"; // Default unit
 
-    // Create error message elements
     const temperatureErrorMessage = document.createElement("span");
     temperatureErrorMessage.className = "error-message";
     temperatureInput.parentElement.appendChild(temperatureErrorMessage);
 
-    // Function to calculate VPD
+    let isTemperatureLocked = true; // Default to temperature locked
+
+    lockTemperatureIcon.addEventListener('click', function() {
+        isTemperatureLocked = !isTemperatureLocked; // Toggle lock status
+        toggleLockIcons();
+    });
+
+    lockHumidityIcon.addEventListener('click', function() {
+        isTemperatureLocked = !isTemperatureLocked; // Toggle lock status
+        toggleLockIcons();
+    });
+
+    function toggleLockIcons() {
+        for (let icon of lockIcons) {
+            if (icon.classList.contains('fa-lock-open')) {
+                icon.classList.remove('fa-lock-open');
+                icon.classList.add('fa-lock');
+            } else if (icon.classList.contains('fa-lock')) {
+                icon.classList.remove('fa-lock');
+                icon.classList.add('fa-lock-open');
+            }
+        }
+    }    
+
     function calculateVPD(tempF, rh) {
         const tempC = (tempF - 32) / 1.8;
         const svp = 0.6108 * Math.exp((17.27 * tempC) / (tempC + 237.3));
         const vpd = (1 - (rh / 100)) * svp;
-        return parseFloat(vpd.toFixed(3)); // Return VPD rounded to 3 decimal places
+        return parseFloat(vpd.toFixed(3));
     }
 
-    // Function to update VPD display
+    function calculateRequiredHumidity(tempF, vpd) {
+        const tempC = (tempF - 32) / 1.8;
+        const svp = 0.6108 * Math.exp((17.27 * tempC) / (tempC + 237.3));
+        const rh = (1 - (vpd / svp)) * 100;
+        return Math.round(rh);
+    }
+
+    function calculateRequiredTemperature(rh, vpd) {
+        let tempC = 1; // Start with a guess
+        let svp, vpdCalculated;
+        const maxIterations = 1000; // Maximum number of iterations
+        const tolerance = 0.001; // Acceptable tolerance for VPD difference
+        let iterations = 0;
+    
+        do {
+            svp = 0.6108 * Math.exp((17.27 * tempC) / (tempC + 237.3));
+            vpdCalculated = (1 - (rh / 100)) * svp;
+            if (vpdCalculated < vpd) {
+                tempC += 0.1; // Increment guess
+            } else {
+                tempC -= 0.1; // Decrement guess
+            }
+            iterations++;
+        } while (Math.abs(vpdCalculated - vpd) > tolerance && iterations < maxIterations);
+    
+        let tempResult;
+        if (currentUnit === "C") {
+            tempResult = Math.round(tempC);
+        } else {
+            tempResult = Math.round((tempC * 1.8) + 32);
+        }
+    
+        return tempResult;
+    }
+
     function updateVPD() {
+
         let tempValue = parseFloat(temperatureInput.value);
         let rh = parseFloat(humidityInput.value);
 
-        // Trim input values to ensure they have no more than two digits
         if (!isNaN(tempValue) && tempValue.toString().length > 2) {
             tempValue = parseFloat(tempValue.toString().slice(0, 2));
             temperatureInput.value = tempValue;
@@ -39,7 +98,6 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!isNaN(tempValue) && !isNaN(rh)) {
             let tempF = tempValue;
             if (currentUnit === "C") {
-                // Convert Celsius to Fahrenheit
                 tempF = (tempValue * 1.8) + 32;
             }
             const vpd = calculateVPD(tempF, rh);
@@ -50,7 +108,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Function to convert temperature between Celsius and Fahrenheit
     function convertTemperature(value, fromUnit, toUnit) {
         if (fromUnit === toUnit) {
             return value;
@@ -64,7 +121,6 @@ document.addEventListener("DOMContentLoaded", function() {
         return value;
     }
 
-    // Function to validate temperature input
     function validateTemperature() {
         let tempValue = parseFloat(temperatureInput.value);
         if (isNaN(tempValue)) return;
@@ -88,11 +144,9 @@ document.addEventListener("DOMContentLoaded", function() {
             showErrorMessage(temperatureErrorMessage, `${maxTemp}°${currentUnit} is the maximum temperature value`);
         } else {
             hideErrorMessage(temperatureErrorMessage);
-            // updateVPD();
         }
     }
 
-    // Function to validate humidity input
     function validateHumidity() {
         let rhValue = parseFloat(humidityInput.value);
         if (isNaN(rhValue)) return;
@@ -104,10 +158,9 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Function to show error message with animation
     function showErrorMessage(element, message) {
         element.textContent = message;
-        element.style.display = "block"; // Ensure the element is displayed
+        element.style.display = "block";
         requestAnimationFrame(() => {
             element.classList.remove("hide");
             element.classList.add("show");
@@ -115,16 +168,14 @@ document.addEventListener("DOMContentLoaded", function() {
         setTimeout(() => hideErrorMessage(element), 1500);
     }
 
-    // Function to hide error message with animation
     function hideErrorMessage(element) {
         element.classList.remove("show");
         element.classList.add("hide");
         setTimeout(() => {
-            element.style.display = "none"; // Hide the element after the animation
-        }, 300); // Match this timeout to the duration of the hide transition
+            element.style.display = "none";
+        }, 300);
     }
 
-    // Event listener for unit radio buttons
     unitRadios.forEach(radio => {
         radio.addEventListener("change", function() {
             const newUnit = this.value;
@@ -141,28 +192,47 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // Initial setup to update the unit symbol based on the default radio button
     unitSymbol.textContent = `°${currentUnit}`;
 
-    // Add event listeners to input fields to update VPD when values change
     temperatureInput.addEventListener("input", function() {
         if (this.value.length === 2) {
             validateTemperature();
         }
         updateVPD();
     });
+
     humidityInput.addEventListener("input", updateVPD);
 
-    // Event listener to update the VPD when the slider is moved
-    vpdRange.addEventListener("input", function () {
-        vpdValueDiv.textContent = `VPD: ${vpdRange.value}`;
+    vpdRange.addEventListener('input', function () {
+
+        const vpd = parseFloat(vpdRange.value);
+        let tempValue = parseFloat(temperatureInput.value);
+        let rhValue = parseFloat(humidityInput.value);
+
+        if (isTemperatureLocked && !isNaN(tempValue)) {
+            rhValue = calculateRequiredHumidity(tempValue, vpd);
+            humidityInput.value = rhValue;
+        } else if (!isTemperatureLocked && !isNaN(rhValue)) {
+            tempValue = calculateRequiredTemperature(rhValue, vpd);
+            temperatureInput.value = tempValue;
+        }
+
+        vpdValueDiv.textContent = `VPD: ${vpd}`;
+
     });
 
-    // Add event listener to temperature input field to validate on blur
+    vpdRange.addEventListener('mouseup', function() {
+        if (isTemperatureLocked) {
+            validateHumidity();
+        } else if (!isTemperatureLocked) {
+            validateTemperature();
+        }
+        updateVPD();
+    });
+
     temperatureInput.addEventListener("blur", validateTemperature);
     humidityInput.addEventListener("blur", validateHumidity);
 
-    // Restrict input to digits only for temperature and humidity inputs
     temperatureInput.addEventListener("keydown", function(event) {
         if (event.key.length === 1 && !/[0-9]/.test(event.key)) {
             event.preventDefault();
@@ -175,7 +245,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Limit input to two digits for temperature and humidity inputs
     temperatureInput.addEventListener("input", function() {
         if (this.value.length > 2) {
             this.value = this.value.slice(0, 2);

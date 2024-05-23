@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VPD Calculator</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
 </head>
 <body>
     <div class="calculator-container">
@@ -25,7 +27,7 @@
             <div class="input-group">
                 <label for="temperature">Room Temperature:</label>
                 <div class="input-row">
-                    <span class="lock-icon" id="lock-temperature">🔓</span>
+                    <span class="lock-icon" id="lock-temperature"><i class="fa-solid fa-lock custom-lock-icon"></i></span>
                     <input type="number" id="temperature" min="0" max="99">
                     <span class="unit-symbol">°F</span>
                 </div>
@@ -33,22 +35,21 @@
             <div class="input-group">
                 <label for="humidity">Relative Humidity:</label>
                 <div class="input-row">
-                    <span class="lock-icon" id="lock-humidity">🔓</span>
-                    <input type="number" id="humidity" min="0" max="99">
-                    <span class="rh-symbol">%</span>
+                  <span class="lock-icon" id="lock-humidity"><i class="fa-solid fa-lock-open custom-lock-icon"></i></span>
+                  <input type="number" id="humidity" min="0" max="99">
+                  <span class="rh-symbol">%</span>
                 </div>
             </div>
         </div>
         <div class="vpd-slider">
             <div class="slider-labels">
                 <span>Danger</span>
-                <span>Optimal</span>
+                <!-- <span>Optimal</span> -->
                 <span>Danger</span>
             </div>
             <input type="range" id="vpd-range" min="0" max="6.28" step="0.01">
-            <div id="vpd-value">VPD: 0.00</div>
+            <div id="vpd-value">VPD: -</div>
         </div>
     </div>
-    <script src="script.js"></script>
 </body>
 </html>

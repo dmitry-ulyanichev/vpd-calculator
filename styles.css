@@ -73,6 +73,18 @@ body {
     margin-right: 6px;
 }
 
+.custom-lock-icon {
+    color: gray;
+}
+
+.fa-lock {
+    margin-right: 4px;
+}
+
+.fa-lock-open {
+    margin-right: 1px;
+}
+
 .unit-symbol, .rh-symbol {
     display: inline-block;
     margin-left: 5px;
@@ -95,7 +107,7 @@ body {
     -moz-appearance: none;
     width: 100%;
     height: 15px;
-    background: linear-gradient(to right, rgb(186, 0, 0) 0%,rgb(186, 0, 0) 6%, orange 8%, green 10%, green 27%, orange 28%, rgb(186, 0, 0) 31%, rgb(186, 0, 0) 100%);
+    background: linear-gradient(to right, rgb(220, 0, 0) 0%,rgb(220, 0, 0) 6%, orange 8%, green 10%, green 26%, orange 28%, rgb(220, 0, 0) 30%, rgb(220, 0, 0) 100%);
     outline: none;
     border-radius: 5px;
     overflow: hidden;

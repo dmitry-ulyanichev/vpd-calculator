@@ -68,6 +68,10 @@ body {
     margin-right: 5px;
 }
 
+.invalid-input {
+    color: rgb(220, 0, 0);
+}
+
 .lock-icon {
     cursor: pointer;
     margin-right: 6px;

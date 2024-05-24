@@ -46,8 +46,11 @@ document.addEventListener("DOMContentLoaded", function() {
         return parseFloat(vpd.toFixed(3));
     }
 
-    function calculateRequiredHumidity(tempF, vpd) {
-        const tempC = (tempF - 32) / 1.8;
+    function calculateRequiredHumidity(temp, vpd) {
+        let tempC = temp;
+        if (currentUnit == "F") {
+            tempC = (temp - 32) / 1.8;
+        }
         const svp = 0.6108 * Math.exp((17.27 * tempC) / (tempC + 237.3));
         const rh = (1 - (vpd / svp)) * 100;
         return Math.round(rh);
@@ -211,9 +214,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (isTemperatureLocked && !isNaN(tempValue)) {
             rhValue = calculateRequiredHumidity(tempValue, vpd);
+            if (rhValue > 99 || rhValue < 0) {
+                humidityInput.classList.add('invalid-input');
+            }
             humidityInput.value = rhValue;
         } else if (!isTemperatureLocked && !isNaN(rhValue)) {
             tempValue = calculateRequiredTemperature(rhValue, vpd);
+            const invalidTemp = currentUnit == "F" && (tempValue > 99 || tempValue < 53) || currentUnit == "C" && (tempValue >37 || tempValue <12);
+            if (invalidTemp) {
+                temperatureInput.classList.add('invalid-input');
+            }
             temperatureInput.value = tempValue;
         }
 
@@ -228,6 +238,8 @@ document.addEventListener("DOMContentLoaded", function() {
             validateTemperature();
         }
         updateVPD();
+        temperatureInput.classList.remove('invalid-input');
+        humidityInput.classList.remove('invalid-input');
     });
 
     temperatureInput.addEventListener("blur", validateTemperature);

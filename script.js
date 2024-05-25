@@ -69,15 +69,30 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    temperatureInput.addEventListener("input", function() {
+    temperatureInput.addEventListener("input", function(event) {
         if (this.value.length > 2) {
             this.value = this.value.slice(0, 2);
         }
+    
+        if (isMobileDevice()) {
+            // Check if the input value has not changed for a short period of time
+            clearTimeout(temperatureInput.inputTimeout);
+            temperatureInput.inputTimeout = setTimeout(function() {
+                temperatureInput.blur(); // Close the virtual keyboard by blurring the input field
+            }, 500);
+        }
     });
-
-    humidityInput.addEventListener("input", function() {
+    
+    humidityInput.addEventListener("input", function(event) {
         if (this.value.length > 2) {
             this.value = this.value.slice(0, 2);
+        }
+    
+        if (isMobileDevice()) {
+            clearTimeout(humidityInput.inputTimeout);
+            humidityInput.inputTimeout = setTimeout(function() {
+                humidityInput.blur();
+            }, 500);
         }
     });
 
@@ -134,6 +149,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     vpdRange.addEventListener('mouseup', handleSliderRelease);
     vpdRange.addEventListener('touchend', handleSliderRelease);
+
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
     
     function handleSliderRelease() {
         if (isTemperatureLocked) {

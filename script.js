@@ -132,7 +132,10 @@ document.addEventListener("DOMContentLoaded", function() {
         vpdValueDiv.textContent = `VPD: ${vpd}`;
     });
 
-    vpdRange.addEventListener('mouseup', function() {
+    vpdRange.addEventListener('mouseup', handleSliderRelease);
+    vpdRange.addEventListener('touchend', handleSliderRelease);
+    
+    function handleSliderRelease() {
         if (isTemperatureLocked) {
             validateHumidity();
         } else if (!isTemperatureLocked) {
@@ -141,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function() {
         updateVPD();
         temperatureInput.classList.remove('invalid-input');
         humidityInput.classList.remove('invalid-input');
-    });
+    }
 
     function updateLinearGradient() {
         const growthStage = growthStageSelect.value;

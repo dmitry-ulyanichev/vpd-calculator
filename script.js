@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function() {
             clearTimeout(temperatureInput.inputTimeout);
             temperatureInput.inputTimeout = setTimeout(function() {
                 temperatureInput.blur(); // Close the virtual keyboard by blurring the input field
-            }, 500);
+            }, 3000);
         }
     });
     
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function() {
             clearTimeout(humidityInput.inputTimeout);
             humidityInput.inputTimeout = setTimeout(function() {
                 humidityInput.blur();
-            }, 500);
+            }, 3000);
         }
     });
 

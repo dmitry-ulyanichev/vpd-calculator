@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const lockTemperatureIcon = document.getElementById('lock-temperature');
     const lockHumidityIcon = document.getElementById('lock-humidity');
     let currentUnit = "F"; // Default unit
+    let isTemperatureLocked = true; // Default to temperature locked
 
     const gradientPercentages = {
         seedling: "0% 1%, orange 21%, green 27%, green 31%, orange 37%, rgb(220, 0, 0) 57%, rgb(220, 0, 0) 100%",
@@ -23,7 +24,62 @@ document.addEventListener("DOMContentLoaded", function() {
     temperatureErrorMessage.className = "error-message";
     temperatureInput.parentElement.appendChild(temperatureErrorMessage);
 
-    let isTemperatureLocked = true; // Default to temperature locked
+    // Event listener for radio buttons selecting Celsius or Fahrenheit units
+    unitRadios.forEach(radio => {
+        radio.addEventListener("change", function() {
+            const newUnit = this.value;
+            if (newUnit !== currentUnit) {
+                const tempValue = parseFloat(temperatureInput.value);
+                if (!isNaN(tempValue)) {
+                    const convertedTemp = convertTemperature(tempValue, currentUnit, newUnit);
+                    temperatureInput.value = convertedTemp;
+                }
+                currentUnit = newUnit;
+                unitSymbol.textContent = `°${newUnit}`;
+                updateVPD();
+            }
+        });
+    });
+
+    // Event listener for the growth stage select
+    growthStageSelect.addEventListener("change", updateLinearGradient);
+
+    temperatureInput.addEventListener("input", function() {
+        if (this.value.length === 2) {
+            validateTemperature();
+        }
+        updateVPD();
+    });
+
+    humidityInput.addEventListener("input", updateVPD);
+
+    // Event listeners for temp and RH inputs and their validation
+    temperatureInput.addEventListener("blur", validateTemperature);
+    humidityInput.addEventListener("blur", validateHumidity);
+
+    temperatureInput.addEventListener("keydown", function(event) {
+        if (event.key.length === 1 && !/[0-9]/.test(event.key)) {
+            event.preventDefault();
+        }
+    });
+
+    humidityInput.addEventListener("keydown", function(event) {
+        if (event.key.length === 1 && !/[0-9]/.test(event.key)) {
+            event.preventDefault();
+        }
+    });
+
+    temperatureInput.addEventListener("input", function() {
+        if (this.value.length > 2) {
+            this.value = this.value.slice(0, 2);
+        }
+    });
+
+    humidityInput.addEventListener("input", function() {
+        if (this.value.length > 2) {
+            this.value = this.value.slice(0, 2);
+        }
+    });
 
     lockTemperatureIcon.addEventListener('click', function() {
         isTemperatureLocked = !isTemperatureLocked; // Toggle lock status
@@ -35,8 +91,57 @@ document.addEventListener("DOMContentLoaded", function() {
         toggleLockIcons();
     });
 
-    // Event listener for the growth stage select
-    growthStageSelect.addEventListener("change", updateLinearGradient);
+    vpdRange.addEventListener('input', function() {
+        let vpd = parseFloat(vpdRange.value);
+        vpd = sliderValueToVPD(vpd);
+        let tempValue = parseFloat(temperatureInput.value);
+        let rhValue = parseFloat(humidityInput.value);
+
+        function setDefaultTemp() {
+            if (currentUnit === "C") {
+                return 25;
+            } else {
+                return 77;
+            }
+        }
+    
+        // Check if temp or both temp and RH inputs are empty
+        if (isNaN(tempValue) && isNaN(rhValue)) {
+            // Set a default temperature value based on the current unit
+            temperatureInput.value = setDefaultTemp();
+        } else if (isNaN(tempValue) && rhValue && isTemperatureLocked) {
+            toggleLockIcons();
+            temperatureInput.value = setDefaultTemp();
+        }
+    
+        if (isTemperatureLocked && !isNaN(tempValue)) {
+            rhValue = calculateRequiredHumidity(tempValue, vpd);
+            if (rhValue > 99 || rhValue < 0) {
+                humidityInput.classList.add('invalid-input');
+            }
+            humidityInput.value = rhValue;
+        } else if (!isTemperatureLocked && !isNaN(rhValue)) {
+            tempValue = calculateRequiredTemperature(rhValue, vpd);
+            const invalidTemp = currentUnit === "F" && (tempValue > 99 || tempValue < 53) || currentUnit === "C" && (tempValue > 37 || tempValue < 12);
+            if (invalidTemp) {
+                temperatureInput.classList.add('invalid-input');
+            }
+            temperatureInput.value = tempValue;
+        }
+    
+        vpdValueDiv.textContent = `VPD: ${vpd}`;
+    });
+
+    vpdRange.addEventListener('mouseup', function() {
+        if (isTemperatureLocked) {
+            validateHumidity();
+        } else if (!isTemperatureLocked) {
+            validateTemperature();
+        }
+        updateVPD();
+        temperatureInput.classList.remove('invalid-input');
+        humidityInput.classList.remove('invalid-input');
+    });
 
     function updateLinearGradient() {
         const growthStage = growthStageSelect.value;
@@ -236,95 +341,4 @@ document.addEventListener("DOMContentLoaded", function() {
           return parseFloat(mappedValue.toFixed(2));
         }
     }
-
-    unitRadios.forEach(radio => {
-        radio.addEventListener("change", function() {
-            const newUnit = this.value;
-            if (newUnit !== currentUnit) {
-                const tempValue = parseFloat(temperatureInput.value);
-                if (!isNaN(tempValue)) {
-                    const convertedTemp = convertTemperature(tempValue, currentUnit, newUnit);
-                    temperatureInput.value = convertedTemp;
-                }
-                currentUnit = newUnit;
-                unitSymbol.textContent = `°${newUnit}`;
-                updateVPD();
-            }
-        });
-    });
-
-    unitSymbol.textContent = `°${currentUnit}`;
-
-    temperatureInput.addEventListener("input", function() {
-        if (this.value.length === 2) {
-            validateTemperature();
-        }
-        updateVPD();
-    });
-
-    humidityInput.addEventListener("input", updateVPD);
-
-    vpdRange.addEventListener('input', function () {
-
-        let vpd = parseFloat(vpdRange.value);
-        vpd = sliderValueToVPD(vpd);
-        let tempValue = parseFloat(temperatureInput.value);
-        let rhValue = parseFloat(humidityInput.value);
-
-        if (isTemperatureLocked && !isNaN(tempValue)) {
-            rhValue = calculateRequiredHumidity(tempValue, vpd);
-            if (rhValue > 99 || rhValue < 0) {
-                humidityInput.classList.add('invalid-input');
-            }
-            humidityInput.value = rhValue;
-        } else if (!isTemperatureLocked && !isNaN(rhValue)) {
-            tempValue = calculateRequiredTemperature(rhValue, vpd);
-            const invalidTemp = currentUnit == "F" && (tempValue > 99 || tempValue < 53) || currentUnit == "C" && (tempValue >37 || tempValue <12);
-            if (invalidTemp) {
-                temperatureInput.classList.add('invalid-input');
-            }
-            temperatureInput.value = tempValue;
-        }
-
-        vpdValueDiv.textContent = `VPD: ${vpd}`;
-
-    });
-
-    vpdRange.addEventListener('mouseup', function() {
-        if (isTemperatureLocked) {
-            validateHumidity();
-        } else if (!isTemperatureLocked) {
-            validateTemperature();
-        }
-        updateVPD();
-        temperatureInput.classList.remove('invalid-input');
-        humidityInput.classList.remove('invalid-input');
-    });
-
-    temperatureInput.addEventListener("blur", validateTemperature);
-    humidityInput.addEventListener("blur", validateHumidity);
-
-    temperatureInput.addEventListener("keydown", function(event) {
-        if (event.key.length === 1 && !/[0-9]/.test(event.key)) {
-            event.preventDefault();
-        }
-    });
-
-    humidityInput.addEventListener("keydown", function(event) {
-        if (event.key.length === 1 && !/[0-9]/.test(event.key)) {
-            event.preventDefault();
-        }
-    });
-
-    temperatureInput.addEventListener("input", function() {
-        if (this.value.length > 2) {
-            this.value = this.value.slice(0, 2);
-        }
-    });
-
-    humidityInput.addEventListener("input", function() {
-        if (this.value.length > 2) {
-            this.value = this.value.slice(0, 2);
-        }
-    });
 });

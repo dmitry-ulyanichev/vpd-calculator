@@ -1,5 +1,6 @@
 
 document.addEventListener("DOMContentLoaded", function() {
+    const growthStageSelect = document.getElementById("growth-stage");
     const temperatureInput = document.getElementById("temperature");
     const humidityInput = document.getElementById("humidity");
     const vpdValueDiv = document.getElementById("vpd-value");
@@ -10,6 +11,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const lockTemperatureIcon = document.getElementById('lock-temperature');
     const lockHumidityIcon = document.getElementById('lock-humidity');
     let currentUnit = "F"; // Default unit
+
+    const gradientPercentages = {
+        seedling: "0% 1%, orange 21%, green 27%, green 31%, orange 37%, rgb(220, 0, 0) 57%, rgb(220, 0, 0) 100%",
+        veg: "0% 10%, orange 30%, green 36%, green 49%, orange 55%, rgb(220, 0, 0) 75%, rgb(220, 0, 0) 100%",
+        flower: "0% 19%, orange 39%, green 45%, green 66%, orange 72%, rgb(220, 0, 0) 92%, rgb(220, 0, 0) 100%",
+        "late-flower": "0% 23%, orange 45%, green 51%, green 64%, orange 70%, rgb(220, 0, 0) 90%, rgb(220, 0, 0) 100%"
+    };
 
     const temperatureErrorMessage = document.createElement("span");
     temperatureErrorMessage.className = "error-message";
@@ -26,6 +34,15 @@ document.addEventListener("DOMContentLoaded", function() {
         isTemperatureLocked = !isTemperatureLocked; // Toggle lock status
         toggleLockIcons();
     });
+
+    // Event listener for the growth stage select
+    growthStageSelect.addEventListener("change", updateLinearGradient);
+
+    function updateLinearGradient() {
+        const growthStage = growthStageSelect.value;
+        const gradientPercentage = gradientPercentages[growthStage];
+        vpdRange.style.background = `linear-gradient(to right, rgb(220, 0, 0) ${gradientPercentage})`;
+    }
 
     function toggleLockIcons() {
         for (let icon of lockIcons) {
@@ -105,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
             const vpd = calculateVPD(tempF, rh);
             vpdValueDiv.textContent = `VPD: ${vpd}`;
-            vpdRange.value = vpd;
+            vpdRange.value = mapVPDToSlider(vpd);
         } else {
             vpdValueDiv.textContent = "VPD: -";
         }
@@ -179,6 +196,47 @@ document.addEventListener("DOMContentLoaded", function() {
         }, 300);
     }
 
+    function mapVPDToSlider(vpd) {
+        const minVPD = 0.01;
+        const maxVPD = 6.36;
+        const part1MaxVPD = 1.6;
+        const part1Range = part1MaxVPD - minVPD;
+        const part2Range = maxVPD - part1MaxVPD;
+      
+        const part1Percentage = 0.7;
+        const part2Percentage = 1 - part1Percentage;
+      
+        if (vpd <= part1MaxVPD) {
+          const mappedValue = minVPD + ((vpd - minVPD) / part1Range) * (part1Percentage * 100);
+          return mappedValue;
+        } else {
+          const part1End = minVPD + part1Percentage * 100;
+          const mappedValue = part1End + ((vpd - part1MaxVPD) / part2Range) * (part2Percentage * 100);
+          return mappedValue;
+        }
+    }
+
+    function sliderValueToVPD(sliderValue) {
+        const minVPD = 0.01;
+        const maxVPD = 6.36;
+        const part1MaxVPD = 1.6;
+        const part1Range = part1MaxVPD - minVPD;
+        const part2Range = maxVPD - part1MaxVPD;
+      
+        const part1Percentage = 0.7;
+        const part2Percentage = 1 - part1Percentage;
+      
+        if (sliderValue <= part1Percentage * 100) {
+          const mappedValue = minVPD + ((sliderValue / (part1Percentage * 100)) * part1Range);
+          return parseFloat(mappedValue.toFixed(2));
+        } else {
+          const part1End = minVPD + part1Range;
+          const part2Start = sliderValue - (part1Percentage * 100);
+          const mappedValue = part1End + ((part2Start / (part2Percentage * 100)) * part2Range);
+          return parseFloat(mappedValue.toFixed(2));
+        }
+    }
+
     unitRadios.forEach(radio => {
         radio.addEventListener("change", function() {
             const newUnit = this.value;
@@ -208,7 +266,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     vpdRange.addEventListener('input', function () {
 
-        const vpd = parseFloat(vpdRange.value);
+        let vpd = parseFloat(vpdRange.value);
+        vpd = sliderValueToVPD(vpd);
         let tempValue = parseFloat(temperatureInput.value);
         let rhValue = parseFloat(humidityInput.value);
 

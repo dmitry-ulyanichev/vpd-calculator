@@ -17,7 +17,8 @@ document.addEventListener("DOMContentLoaded", function() {
         seedling: "0% 1%, orange 21%, green 27%, green 31%, orange 37%, rgb(220, 0, 0) 57%, rgb(220, 0, 0) 100%",
         veg: "0% 10%, orange 30%, green 36%, green 49%, orange 55%, rgb(220, 0, 0) 75%, rgb(220, 0, 0) 100%",
         flower: "0% 19%, orange 39%, green 45%, green 66%, orange 72%, rgb(220, 0, 0) 92%, rgb(220, 0, 0) 100%",
-        "late-flower": "0% 23%, orange 45%, green 51%, green 64%, orange 70%, rgb(220, 0, 0) 90%, rgb(220, 0, 0) 100%"
+        "late-flower": "0% 23%, orange 45%, green 51%, green 64%, orange 70%, rgb(220, 0, 0) 90%, rgb(220, 0, 0) 100%",
+        drying: "0% 8%, orange 28%, green 34%, green 41%, orange 47%, rgb(220, 0, 0) 67%, rgb(220, 0, 0) 100%"
     };
 
     const temperatureErrorMessage = document.createElement("span");
@@ -79,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
             clearTimeout(temperatureInput.inputTimeout);
             temperatureInput.inputTimeout = setTimeout(function() {
                 temperatureInput.blur(); // Close the virtual keyboard by blurring the input field
-            }, 3000);
+            }, 2500);
         }
     });
     
@@ -92,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function() {
             clearTimeout(humidityInput.inputTimeout);
             humidityInput.inputTimeout = setTimeout(function() {
                 humidityInput.blur();
-            }, 3000);
+            }, 2500);
         }
     });
 
@@ -102,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     lockHumidityIcon.addEventListener('click', function() {
-        isTemperatureLocked = !isTemperatureLocked; // Toggle lock status
+        isTemperatureLocked = !isTemperatureLocked;
         toggleLockIcons();
     });
 
